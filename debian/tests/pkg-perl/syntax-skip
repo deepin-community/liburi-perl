@@ -1,0 +1,2 @@
+# needs Business::ISBN in Suggests
+URI/urn/isbn.pm
