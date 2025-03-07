@@ -11,6 +11,7 @@ on 'develop' => sub {
     requires "IPC::Open3" => "0";
     requires "Pod::Coverage::TrustPod" => "0";
     requires "Test::CPAN::Meta" => "0";
+    requires "Test::DependentModules" => "0.27";
     requires "Test::MinimumVersion" => "0";
     requires "Test::Mojibake" => "0";
     requires "Test::More" => "0.94";
@@ -27,6 +28,7 @@ on 'runtime' => sub {
     requires "Data::Dumper" => "0";
     requires "Encode" => "0";
     requires "Exporter" => "5.57";
+    requires "MIME::Base32" => "0";
     requires "MIME::Base64" => "2";
     requires "Net::Domain" => "0";
     requires "Scalar::Util" => "0";
@@ -38,14 +40,16 @@ on 'runtime' => sub {
     requires "strict" => "0";
     requires "warnings" => "0";
     requires "utf8" => '0';
+    suggests 'Regexp::IPv6' => "0.03";
     suggests 'Business::ISBN' => "3.005";
 };
 
 on 'test' => sub {
     requires "File::Spec::Functions" => "0";
     requires "File::Temp" => "0";
-    requires "Test" => "0";
+    requires "Test::Fatal" => "0";
     requires "Test::More" => "0.96";
     requires "Test::Needs" => '0';
+    requires "Test::Warnings" => '0';
     requires "utf8" => "0";
 };
