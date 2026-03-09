@@ -1,69 +1,71 @@
 use strict;
 use warnings;
 
-print "1..11\n";
+use Test::More tests => 13;
 
 use URI ();
 
 my $u = URI->new('sip:phone@domain.ext');
-print "not " unless $u->user eq 'phone' &&
-		    $u->host eq 'domain.ext' &&
-		    $u->port eq '5060' &&
-		    $u eq 'sip:phone@domain.ext';
-print "ok 1\n";
+ok($u->user eq 'phone' &&
+   $u->host eq 'domain.ext' &&
+   $u->port eq '5060' &&
+   $u->host_port eq 'domain.ext:5060' &&
+   $u->authority eq 'phone@domain.ext' &&
+   $u eq 'sip:phone@domain.ext');
 
 $u->host_port('otherdomain.int:9999');
-print "not " unless $u->host eq 'otherdomain.int' &&
-		    $u->port eq '9999' &&
-		    $u eq 'sip:phone@otherdomain.int:9999';
-print "ok 2\n";
+ok($u->host eq 'otherdomain.int' &&
+   $u->port eq '9999' &&
+   $u->host_port eq 'otherdomain.int:9999' &&
+   $u->authority eq 'phone@otherdomain.int:9999' &&
+   $u eq 'sip:phone@otherdomain.int:9999');
 
 $u->port('5060');
 $u = $u->canonical;
-print "not " unless $u->host eq 'otherdomain.int' &&
-		    $u->port eq '5060' &&
-		    $u eq 'sip:phone@otherdomain.int';
-print "ok 3\n";
+ok($u->port eq '5060' &&
+   $u->host_port eq 'otherdomain.int:5060' &&
+   $u->authority eq 'phone@otherdomain.int' &&
+   $u eq 'sip:phone@otherdomain.int');
 
 $u->user('voicemail');
-print "not " unless $u->user eq 'voicemail' &&
-		    $u eq 'sip:voicemail@otherdomain.int';
-print "ok 4\n";
+ok($u->user eq 'voicemail' &&
+   $u->authority eq 'voicemail@otherdomain.int' &&
+   $u eq 'sip:voicemail@otherdomain.int');
+
+$u->authority('fax@gateway.ext');
+ok($u->user eq 'fax' &&
+   $u->host eq 'gateway.ext' &&
+   $u->host_port eq 'gateway.ext:5060' &&
+   $u->authority eq 'fax@gateway.ext' &&
+   $u eq 'sip:fax@gateway.ext');
 
 $u = URI->new('sip:phone@domain.ext?Subject=Meeting&Priority=Urgent');
-print "not " unless $u->host eq 'domain.ext' &&
-		    $u->query eq 'Subject=Meeting&Priority=Urgent';
-print "ok 5\n";
+ok($u->query eq 'Subject=Meeting&Priority=Urgent');
 
 $u->query_form(Subject => 'Lunch', Priority => 'Low');
 my @q = $u->query_form;
-print "not " unless $u->host eq 'domain.ext' &&
-		    $u->query eq 'Subject=Lunch&Priority=Low' &&
-		    @q == 4 && "@q" eq "Subject Lunch Priority Low";
-print "ok 6\n";
+ok($u->query eq 'Subject=Lunch&Priority=Low' &&
+   @q == 4 && "@q" eq 'Subject Lunch Priority Low' &&
+   $u eq 'sip:phone@domain.ext?Subject=Lunch&Priority=Low');
 
 $u = URI->new('sip:phone@domain.ext;maddr=127.0.0.1;ttl=16');
-print "not " unless $u->host eq 'domain.ext' &&
-		    $u->params eq 'maddr=127.0.0.1;ttl=16';
-print "ok 7\n";
+ok($u->params eq 'maddr=127.0.0.1;ttl=16');
+
+$u->params('maddr=127.0.0.1;ttl=16;x-addedparam=1');
+ok($u->params eq 'maddr=127.0.0.1;ttl=16;x-addedparam=1' && 
+   $u eq 'sip:phone@domain.ext;maddr=127.0.0.1;ttl=16;x-addedparam=1');
 
 $u = URI->new('sip:phone@domain.ext?Subject=Meeting&Priority=Urgent');
 $u->params_form(maddr => '127.0.0.1', ttl => '16');
 my @p = $u->params_form;
-print "not " unless $u->host eq 'domain.ext' &&
-		    $u->query eq 'Subject=Meeting&Priority=Urgent' &&
-		    $u->params eq 'maddr=127.0.0.1;ttl=16' &&
-		    @p == 4 && "@p" eq "maddr 127.0.0.1 ttl 16";
-
-print "ok 8\n";
+ok($u->query eq 'Subject=Meeting&Priority=Urgent' &&
+   $u->params eq 'maddr=127.0.0.1;ttl=16' &&
+   @p == 4 && "@p" eq "maddr 127.0.0.1 ttl 16");
 
 $u = URI->new_abs('sip:phone@domain.ext', 'sip:foo@domain2.ext');
-print "not " unless $u eq 'sip:phone@domain.ext';
-print "ok 9\n";
+is($u, 'sip:phone@domain.ext');
 
 $u = URI->new('sip:phone@domain.ext');
-print "not " unless $u eq $u->abs('http://www.cpan.org/');
-print "ok 10\n";
+is($u, $u->abs('http://www.cpan.org/'));
 
-print "not " unless $u eq $u->rel('http://www.cpan.org/');
-print "ok 11\n";
+is($u, $u->rel('http://www.cpan.org/'));

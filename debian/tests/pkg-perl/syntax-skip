@@ -1,2 +1,5 @@
 # needs Business::ISBN in Suggests
 URI/urn/isbn.pm
+
+# needs MIME::Base32 in Suggests
+URI/otpauth.pm

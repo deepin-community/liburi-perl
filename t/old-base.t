@@ -2,12 +2,12 @@ use strict;
 use warnings;
 
 use Test::More 0.96;
-use URI::URL qw(url);
+use URI::URL qw( url );
 use URI::Escape qw(uri_escape uri_unescape);
 use File::Temp qw(tempdir);
 
 # want compatibility
-use URI::file;
+use URI::file ();
 $URI::file::DEFAULT_AUTHORITY = undef;
 
 
@@ -316,14 +316,14 @@ sub parts_test {
     );
 
     $url->query_form(a => undef, a => 'foo', '&=' => '&=+');
-    is($url->as_string, 'http://web?a=&a=foo&%26%3D=%26%3D%2B', ref($url) . '->as_string');
+    is($url->as_string, 'http://web?a&a=foo&%26%3D=%26%3D%2B', ref($url) . '->as_string');
 
     my @a = $url->query_form;
     is(scalar(@a), 6, 'length');
     is_deeply(
         \@a,
         [
-            'a', '',
+            'a', undef,
             'a', 'foo',
             '&=', '&=+',
         ],
@@ -346,6 +346,19 @@ sub parts_test {
 
     # Try array ref values in the key value pairs
     $url->query_form(a => ['foo', 'bar'], b => 'foo', c => ['bar', 'foo']);
+    is($url->as_string, 'http://web?a=foo&a=bar&b=foo&c=bar&c=foo', ref($url) . '->as_string');
+
+    # Same, but using array object
+    {
+        package
+            Foo::Bar::Array;
+        sub new
+        {
+            my $this = shift( @_ );
+            return( bless( ( @_ == 1 && ref( $_[0] || '' ) eq 'ARRAY' ) ? shift( @_ ) : [@_] => ( ref( $this ) || $this ) ) );
+        }
+    }
+    $url->query_form(a => Foo::Bar::Array->new(['foo', 'bar']), b => 'foo', c => Foo::Bar::Array->new(['bar', 'foo']));
     is($url->as_string, 'http://web?a=foo&a=bar&b=foo&c=bar&c=foo', ref($url) . '->as_string');
 
     subtest 'netloc_test' => \&netloc_test;
@@ -552,7 +565,13 @@ sub escape_test {
     is($all, $new, "uri_escape->uri_unescape"),
 
     $url->path($all);
-    is($url->full_path, q(%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F%20!%22%23$%&'()*+,-./0123456789:;%3C=%3E%3F@ABCDEFGHIJKLMNOPQRSTUVWXYZ[%5C]%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%7F%80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F%90%91%92%93%94%95%96%97%98%99%9A%9B%9C%9D%9E%9F%A0%A1%A2%A3%A4%A5%A6%A7%A8%A9%AA%AB%AC%AD%AE%AF%B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF%C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF), ref($url) . '->as_string');
+
+    if ( URI::HAS_RESERVED_SQUARE_BRACKETS ) {
+      # legacy: this was legal before '[' and ']' were restricted to the host part of the URI (see: RFC 3513 & RFC 3986)
+      is($url->full_path, q(%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F%20!%22%23$%&'()*+,-./0123456789:;%3C=%3E%3F@ABCDEFGHIJKLMNOPQRSTUVWXYZ[%5C]%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%7F%80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F%90%91%92%93%94%95%96%97%98%99%9A%9B%9C%9D%9E%9F%A0%A1%A2%A3%A4%A5%A6%A7%A8%A9%AA%AB%AC%AD%AE%AF%B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF%C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF), ref($url) . '->as_string');
+    } else {
+      is($url->full_path, q(%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F%10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F%20!%22%23$%&'()*+,-./0123456789:;%3C=%3E%3F@ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~%7F%80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F%90%91%92%93%94%95%96%97%98%99%9A%9B%9C%9D%9E%9F%A0%A1%A2%A3%A4%A5%A6%A7%A8%A9%AA%AB%AC%AD%AE%AF%B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF%C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF%D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF%E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF%F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF), ref($url) . '->as_string');
+    }
 
     # test escaping uses uppercase (preferred by rfc1837)
     $url = new URI::URL 'file://h/';

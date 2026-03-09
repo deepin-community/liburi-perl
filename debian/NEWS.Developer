@@ -1,0 +1,25 @@
+liburi-perl (5.16-1) unstable; urgency=medium
+
+  Noteworthy changes from the upstream Changes file:
+
+  5.15: Teach uri_escape to accept a Regexp object as the characters to escape
+  as an alternative to a character class.
+
+  5.16: Merge the methods from URI::QueryParam into URI, so they are
+  always available.
+
+ -- gregor herrmann <gregoa@debian.org>  Wed, 12 Oct 2022 17:36:26 +0200
+
+liburi-perl (5.11-1) unstable; urgency=medium
+
+  From URI(3pm), read the full details there:
+
+    Before version 5.11, URI treated square brackets as reserved characters
+    throughout the whole URI string. However, these brackets are reserved only
+    within the authority/host part of the URI and nowhere else (RFC 3986).
+
+    Starting with version 5.11, URI takes this distinction into account.
+    Setting the environment variable URI_HAS_RESERVED_SQUARE_BRACKETS
+    (programmatically or via the shell), restores the old behavior.
+
+ -- gregor herrmann <gregoa@debian.org>  Wed, 06 Jul 2022 18:17:46 +0200
