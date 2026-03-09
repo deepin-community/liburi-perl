@@ -11,7 +11,7 @@ BEGIN {
 }
 use Pod::Coverage::TrustPod;
 
-my %skip = map { $_ => 1 } qw( URI::IRI URI::_foreign URI::_idna URI::_login URI::_ldap URI::file::QNX URI::nntp URI::urn::isbn URI::urn::oid URI::sftp );
+my %skip = map { $_ => 1 } qw( URI::IRI URI::_foreign URI::_idna URI::_login URI::_ldap URI::file::QNX URI::ftpes URI::ftps URI::irc URI::nntp URI::urn::isbn URI::urn::oid URI::scp URI::sftp );
 
 my @modules;
 for my $module ( all_modules() ) {
@@ -42,9 +42,6 @@ my %trustme = (
              'URI::WithBase' => [
                                   qr/^(?:can|clone|eq|new_abs)$/
                                 ],
-             'URI::_punycode' => [
-                                   qr/^(?:adapt|code_point|digit_value|min)$/
-                                 ],
              'URI::_query' => [
                                 qr/^(?:equery|query|query_form|query_form_hash|query_keywords|query_param|query_param_append|query_param_delete)$/
                               ],
@@ -76,7 +73,7 @@ my %trustme = (
                                      qr/^(?:file|fix_path)$/
                                    ],
              'URI::ftp' => [
-                             qr/^(?:password|user)$/
+                             qr/^(?:password|user|encrypt_mode)$/
                            ],
              'URI::gopher' => [
                                 qr/^(?:gopher_type|gtype|search|selector|string)$/
